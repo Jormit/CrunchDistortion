@@ -61,11 +61,12 @@ public:
     
     // Set default values.
     float mGain = 0.0f;
-    float mPresence = 1.0f;
+    float mPresence = 5.0f;
     float mCurrentGainStyle = GainStyle::soft;
     
-    // Filter for presence control
-    IIRFilter highShelf;
+    // Filters.
+    IIRFilter highShelf [2];
+    IIRFilter lowShelf [2];
     
     float sampleRate;
     

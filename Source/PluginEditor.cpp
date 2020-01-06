@@ -17,7 +17,7 @@ CrunchDistortionAudioProcessorEditor::CrunchDistortionAudioProcessorEditor (Crun
 {
     // Gain Slider setup.
     addAndMakeVisible (gainSlider);
-    gainSlider.setRange (0.0, 20.0f, 0.5f);
+    gainSlider.setRange (0.0, 30.0f, 0.5f);
     gainSlider.setTextValueSuffix ("dB");
     gainSlider.setValue (processor.mGain);
     gainSlider.addListener (this);
@@ -33,7 +33,7 @@ CrunchDistortionAudioProcessorEditor::CrunchDistortionAudioProcessorEditor (Crun
     presenceSlider.addListener (this);
     
     addAndMakeVisible(presenceLabel);
-    presenceLabel.setText ("Presence", dontSendNotification);
+    presenceLabel.setText ("Tone", dontSendNotification);
     presenceLabel.attachToComponent (&presenceSlider, true);    
     
     // Algo selection setup.    

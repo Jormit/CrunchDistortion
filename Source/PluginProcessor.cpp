@@ -21,7 +21,7 @@ CrunchDistortionAudioProcessor::CrunchDistortionAudioProcessor()
                       #endif
                        .withOutput ("Output", AudioChannelSet::stereo(), true)
                      #endif
-                       ), highShelf()
+                       ), highShelf(), lowShelf()
 #endif
 {
 }
@@ -96,6 +96,11 @@ void CrunchDistortionAudioProcessor::changeProgramName (int index, const String&
 void CrunchDistortionAudioProcessor::prepareToPlay (double sampleRate, int samplesPerBlock)
 {
     this->sampleRate = sampleRate;
+    
+    // Using a lowshelf to boost lower frequencies to make sound warmer.
+    // Need a filter for each channel to eliminate crackling.
+    lowShelf[0].setCoefficients(IIRCoefficients::makeLowShelf (sampleRate, 500, 1.0f, 2.0f));
+    lowShelf[1].setCoefficients(IIRCoefficients::makeLowShelf (sampleRate, 500, 1.0f, 2.0f));
 }
 
 void CrunchDistortionAudioProcessor::releaseResources()
@@ -138,21 +143,31 @@ void CrunchDistortionAudioProcessor::processBlock (AudioBuffer<float>& buffer, M
     for (auto i = totalNumInputChannels; i < totalNumOutputChannels; ++i)
         buffer.clear (i, 0, buffer.getNumSamples());
         
-    // Calculate the highshelf coefficients.
-    highShelf.setCoefficients(IIRCoefficients::makeHighShelf (sampleRate, 400, 1.0f/std::sqrt(2), mPresence));
-
+    
         
     // Main processing.
     for (int channel = 0; channel < totalNumInputChannels; ++channel)
     {
-        auto* channelData = buffer.getWritePointer (channel);
+        // Calculate the highshelf coefficients.
+        highShelf[channel].setCoefficients(IIRCoefficients::makeHighShelf (sampleRate, 300, 1.0f/std::sqrt(2), mPresence/5.0f));
+        
+        float* channelData = buffer.getWritePointer (channel);
+        
+        // Pre Filtering.
+        lowShelf[channel].processSamples(channelData, buffer.getNumSamples());     
+        
+        // Apply gain.
+        for (int sample = 0; sample < buffer.getNumSamples(); sample++) 
+        {
+            channelData[sample] = channelData[sample] * Decibels::decibelsToGain <float> (mGain);
+        }
         
         // Soft Clipping Algorithm.
         if (mCurrentGainStyle == GainStyle::soft)
         {
             for (int sample = 0; sample < buffer.getNumSamples(); sample++) 
             {
-                channelData[sample] = std::atan (buffer.getSample (channel, sample) * Decibels::decibelsToGain <float> (mGain));
+                channelData[sample] = std::atan (channelData[sample]);
             }
             
         } 
@@ -162,27 +177,21 @@ void CrunchDistortionAudioProcessor::processBlock (AudioBuffer<float>& buffer, M
         {
             for (int sample = 0; sample < buffer.getNumSamples(); sample++)
             {
-                float outSample = buffer.getSample (channel, sample)* Decibels::decibelsToGain <float> (mGain);
                 
-                if (outSample > 1.0f)
+                if (channelData[sample] > 1.0f)
                 {
                     channelData[sample] = 1.0f;
                 }
                 
-                else if (outSample < -1.0f)
+                else if (channelData[sample] < -1.0f)
                 {
                     channelData[sample] = -1.0f;
-                }
-                
-                else 
-                {
-                    channelData[sample] = outSample;
                 }
             }            
         }
         
-        // Do filtering.
-        highShelf.processSamples(channelData, buffer.getNumSamples());
+        // Post filtering.
+        highShelf[channel].processSamples(channelData, buffer.getNumSamples());
     }    
 }
 
