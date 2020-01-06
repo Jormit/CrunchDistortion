@@ -37,7 +37,11 @@ private:
     
     // UI components.
     Slider gainSlider;
+    Slider presenceSlider;
+    
     Label gainLabel;
+    Label presenceLabel;
+    
     ComboBox gainStyle;
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (CrunchDistortionAudioProcessorEditor)

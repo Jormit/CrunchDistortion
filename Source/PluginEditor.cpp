@@ -17,7 +17,7 @@ CrunchDistortionAudioProcessorEditor::CrunchDistortionAudioProcessorEditor (Crun
 {
     // Gain Slider setup.
     addAndMakeVisible (gainSlider);
-    gainSlider.setRange (0.0, 20.0, 0.5f);
+    gainSlider.setRange (0.0, 20.0f, 0.5f);
     gainSlider.setTextValueSuffix ("dB");
     gainSlider.setValue (processor.mGain);
     gainSlider.addListener (this);
@@ -25,6 +25,16 @@ CrunchDistortionAudioProcessorEditor::CrunchDistortionAudioProcessorEditor (Crun
     addAndMakeVisible(gainLabel);
     gainLabel.setText ("Gain", dontSendNotification);
     gainLabel.attachToComponent (&gainSlider, true);
+    
+    // Presence Slider setup.
+    addAndMakeVisible (presenceSlider);
+    presenceSlider.setRange (0.0, 10.0f, 0.5f);
+    presenceSlider.setValue (processor.mPresence);
+    presenceSlider.addListener (this);
+    
+    addAndMakeVisible(presenceLabel);
+    presenceLabel.setText ("Presence", dontSendNotification);
+    presenceLabel.attachToComponent (&presenceSlider, true);    
     
     // Algo selection setup.    
     addAndMakeVisible (gainStyle);
@@ -35,7 +45,7 @@ CrunchDistortionAudioProcessorEditor::CrunchDistortionAudioProcessorEditor (Crun
     gainStyle.setSelectedId (processor.mCurrentGainStyle);
     
     
-    setSize (500, 100);
+    setSize (500, 130);
 }
 
 CrunchDistortionAudioProcessorEditor::~CrunchDistortionAudioProcessorEditor()
@@ -56,9 +66,10 @@ void CrunchDistortionAudioProcessorEditor::paint (Graphics& g)
 void CrunchDistortionAudioProcessorEditor::resized()
 {
     auto margin = 20;
-    auto labelSpace = 30;
-    gainSlider.setBounds (margin + labelSpace, 20, getWidth() - 2 * margin - labelSpace, 20);    
-    gainStyle.setBounds (margin , 50, getWidth() - 2 * margin , 20);
+    auto labelSpace = 40;
+    gainSlider.setBounds (margin + labelSpace, 20, getWidth() - 2 * margin - labelSpace, 20);   
+    presenceSlider.setBounds (margin + labelSpace, 50, getWidth() - 2 * margin - labelSpace, 20);      
+    gainStyle.setBounds (margin , 80, getWidth() - 2 * margin , 20);
 
 }
 
@@ -66,6 +77,7 @@ void CrunchDistortionAudioProcessorEditor::sliderValueChanged(Slider *slider)
 {
     
     processor.mGain = gainSlider.getValue();
+    processor.mPresence = presenceSlider.getValue();
 }
 
 void CrunchDistortionAudioProcessorEditor::gainStyleChanged()

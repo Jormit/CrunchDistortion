@@ -21,7 +21,7 @@ CrunchDistortionAudioProcessor::CrunchDistortionAudioProcessor()
                       #endif
                        .withOutput ("Output", AudioChannelSet::stereo(), true)
                      #endif
-                       )
+                       ), highShelf()
 #endif
 {
 }
@@ -95,8 +95,7 @@ void CrunchDistortionAudioProcessor::changeProgramName (int index, const String&
 //==============================================================================
 void CrunchDistortionAudioProcessor::prepareToPlay (double sampleRate, int samplesPerBlock)
 {
-    // Use this method as the place to do any pre-playback
-    // initialisation that you need..
+    this->sampleRate = sampleRate;
 }
 
 void CrunchDistortionAudioProcessor::releaseResources()
@@ -138,6 +137,9 @@ void CrunchDistortionAudioProcessor::processBlock (AudioBuffer<float>& buffer, M
 
     for (auto i = totalNumInputChannels; i < totalNumOutputChannels; ++i)
         buffer.clear (i, 0, buffer.getNumSamples());
+        
+    // Calculate the highshelf coefficients.
+    highShelf.setCoefficients(IIRCoefficients::makeHighShelf (sampleRate, 400, 1.0f/std::sqrt(2), mPresence));
 
         
     // Main processing.
@@ -176,10 +178,12 @@ void CrunchDistortionAudioProcessor::processBlock (AudioBuffer<float>& buffer, M
                 {
                     channelData[sample] = outSample;
                 }
-            }
-            
+            }            
         }
-    }
+        
+        // Do filtering.
+        highShelf.processSamples(channelData, buffer.getNumSamples());
+    }    
 }
 
 //==============================================================================
